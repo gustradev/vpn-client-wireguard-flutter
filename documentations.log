@@ -35,3 +35,9 @@ Semua dokumentasi utama, setup modular, dan dependency sudah selesai untuk tahap
 Step 1.1 selesai:
  - profile.dart, tunnel_status.dart, log_entry.dart sudah dibuat dan diisi sesuai domain.
  - Semua entity domain dasar (Profile, TunnelStatus, LogEntry) sudah siap untuk MVP.
+
+Update:
+- Semua komentar di file data layer profile (profile_secure_storage.dart, profile_local_db.dart, profile_repository_impl.dart) sudah diubah ke bahasa Indonesia non formal yang mudah dimengerti tim.
+- File sudah di-commit dan di-push ke GitHub.
+- Komentar sekarang lebih santai dan jelas buat kolaborasi tim.
+- Struktur dan fungsi kode tetap sama, hanya penjelasan/comment yang diubah.
