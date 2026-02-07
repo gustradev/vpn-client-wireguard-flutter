@@ -1,4 +1,11 @@
 2026-02-08
+Note:
+- Mulai sekarang, perubahan komentar internal (misal: ganti bahasa, penyesuaian penjelasan kode) tidak akan didokumentasikan di log ini.
+- Dokumentasi log hanya untuk hal penting seperti debugging, error, atau perubahan besar yang berdampak ke fungsionalitas.
+
+---
+
+2026-02-08
 Step 1.3 selesai:
  - Semua usecase domain (import, list, save, connect, disconnect, observe) sudah dibuat dan di-audit.
  - Komentar sudah diubah ke bahasa Indonesia nonformal, mudah dipahami.
