@@ -6,6 +6,12 @@ Note:
 ---
 
 2026-02-08
+Step 1.6 selesai:
+ - Semua file skeleton UI (router.dart, home_screen.dart, profile_list_screen.dart, profile_detail_screen.dart, import_profile_screen.dart, status_screen.dart, settings_screen.dart) sudah dibuat.
+ - GoRouter sudah di-setup dengan route ke semua screen utama.
+ - Setiap screen punya layout dasar (Scaffold, AppBar, body kosong).
+ - Siap untuk pengembangan fitur dan integrasi state selanjutnya.
+
 Step 1.5 selesai:
  - File wg_config_parser.dart sudah dibuat untuk parser config [Interface]/[Peer] dengan validasi fields minimal.
  - File validators.dart sudah diisi fungsi validasi PrivateKey, Address, PublicKey, AllowedIPs, dan error message yang jelas.
