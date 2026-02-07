@@ -3,24 +3,22 @@ import 'package:vpn_client_wireguard_flutter/core/result.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/entities/profile.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/repositories/profile_repository.dart';
 
-/// Use case for saving (creating or updating) VPN profiles.
+/// Use case buat nyimpan (bikin atau update) profil VPN.
 ///
-/// This use case handles both creating new profiles and updating existing ones,
-/// with validation and automatic timestamp management.
+/// Di sini bisa bikin profil baru atau update yang lama,
+/// ada validasi dan timestamp otomatis.
 class SaveProfile {
   final ProfileRepository _repository;
   final Uuid _uuid;
 
-  /// Creates a new SaveProfile use case.
+  /// Bikin instance SaveProfile use case.
   SaveProfile(this._repository) : _uuid = const Uuid();
 
-  /// Saves a profile (creates new or updates existing).
+  /// Simpan profil (bikin baru atau update yang lama).
   ///
-  /// [profile] - The profile to save. If the profile has an ID, it will be updated.
-  ///              If the ID is null or empty, a new profile will be created.
+  /// [profile] - Profil yang mau disimpan. Kalau ada ID, diupdate. Kalau ID kosong, bikin baru.
   ///
-  /// Returns a [Result] containing the saved [Profile] on success,
-  /// or an error message on failure.
+  /// Return [Result] berisi [Profile] kalau sukses, atau error kalau gagal.
   Future<Result<Profile>> call(Profile profile) async {
     // Validate the profile before saving
     final validationResult = await _repository.validateProfile(profile);
@@ -30,7 +28,7 @@ class SaveProfile {
       );
     }
 
-    // Check if this is a new profile or an update
+    // Cek ini profil baru atau update
     if (profile.id.isEmpty) {
       return await _createNewProfile(profile);
     } else {
@@ -38,12 +36,11 @@ class SaveProfile {
     }
   }
 
-  /// Creates a new profile.
+  /// Bikin profil baru.
   ///
-  /// [profile] - The profile data to create (without an ID)
+  /// [profile] - Data profil yang mau dibuat (tanpa ID)
   ///
-  /// Returns a [Result] containing the created [Profile] on success,
-  /// or an error message on failure.
+  /// Return [Result] berisi [Profile] yang baru kalau sukses, atau error kalau gagal.
   Future<Result<Profile>> _createNewProfile(Profile profile) async {
     final now = DateTime.now();
 

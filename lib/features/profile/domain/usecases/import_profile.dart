@@ -3,25 +3,24 @@ import 'package:vpn_client_wireguard_flutter/core/result.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/entities/profile.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/repositories/profile_repository.dart';
 
-/// Use case for importing a WireGuard profile from configuration data.
+/// Use case buat import profil WireGuard dari data konfigurasi.
 ///
-/// This use case handles the import of profiles from various sources
-/// including configuration files, QR codes, and JSON data.
+/// Di sini bisa import profil dari berbagai sumber:
+/// file konfigurasi, QR code, atau data JSON.
 class ImportProfile {
   final ProfileRepository _repository;
   final Uuid _uuid;
 
-  /// Creates a new ImportProfile use case.
+  /// Bikin instance ImportProfile use case.
   ImportProfile(this._repository) : _uuid = const Uuid();
 
-  /// Imports a profile from configuration data.
+  /// Import profil dari data konfigurasi.
   ///
-  /// [configData] - The configuration data to import
-  /// [format] - The format of the configuration data
-  /// [name] - Optional custom name for the profile (defaults to auto-generated)
+  /// [configData] - Data konfigurasi yang mau diimport
+  /// [format] - Format data konfigurasi
+  /// [name] - Nama custom (opsional, default auto)
   ///
-  /// Returns a [Result] containing the imported [Profile] on success,
-  /// or an error message on failure.
+  /// Return [Result] berisi [Profile] kalau sukses, atau error kalau gagal.
   Future<Result<Profile>> call(
     String configData,
     ProfileImportFormat format, {
@@ -37,7 +36,7 @@ class ImportProfile {
 
     final profile = importResult.valueOrThrow;
 
-    // If a custom name is provided, update the profile
+    // Kalau ada nama custom, update profilnya
     if (name != null && name.isNotEmpty) {
       final updatedProfile = profile.copyWith(name: name);
       final updateResult = await _repository.updateProfile(updatedProfile);
@@ -54,10 +53,10 @@ class ImportProfile {
     return Result.success(profile);
   }
 
-  /// Imports a profile from a WireGuard configuration file content.
+  /// Import profil dari isi file konfigurasi WireGuard (.conf).
   ///
-  /// [configContent] - The content of the .conf file
-  /// [name] - Optional custom name for the profile
+  /// [configContent] - Isi file .conf
+  /// [name] - Nama custom (opsional)
   ///
   /// Returns a [Result] containing the imported [Profile] on success,
   /// or an error message on failure.

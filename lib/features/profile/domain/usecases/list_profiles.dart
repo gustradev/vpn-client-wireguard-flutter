@@ -2,29 +2,28 @@ import 'package:vpn_client_wireguard_flutter/core/result.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/entities/profile.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/repositories/profile_repository.dart';
 
-/// Use case for listing and retrieving VPN profiles.
+/// Use case buat ngambil dan nge-list profil VPN.
 ///
-/// This use case provides methods to retrieve profiles from the repository
-/// with various filtering and sorting options.
+/// Di sini ada berbagai cara buat ambil profil dari repository,
+/// bisa filter, urutkan, cari, dan lain-lain.
 class ListProfiles {
   final ProfileRepository _repository;
 
-  /// Creates a new ListProfiles use case.
+  /// Bikin instance ListProfiles use case.
   ListProfiles(this._repository);
 
-  /// Gets all profiles.
+  /// Ambil semua profil.
   ///
-  /// Returns a [Result] containing a list of all [Profile] objects on success,
-  /// or an error message on failure.
+  /// Return [Result] berisi list [Profile] kalau sukses, atau error kalau gagal.
   Future<Result<List<Profile>>> call() async {
     return await _repository.getAllProfiles();
   }
 
-  /// Gets all profiles sorted by name.
+  /// Ambil semua profil, diurutkan berdasarkan nama.
   ///
-  /// [ascending] - Whether to sort in ascending order (default: true)
+  /// [ascending] - Urut naik (default: true)
   ///
-  /// Returns a [Result] containing a sorted list of [Profile] objects.
+  /// Return [Result] berisi list [Profile] yang sudah diurutkan.
   Future<Result<List<Profile>>> sortedByName({bool ascending = true}) async {
     final result = await _repository.getAllProfiles();
 
@@ -41,11 +40,11 @@ class ListProfiles {
     return Result.success(sorted);
   }
 
-  /// Gets all profiles sorted by creation date.
+  /// Ambil semua profil, diurutkan berdasarkan tanggal dibuat.
   ///
-  /// [ascending] - Whether to sort in ascending order (default: false, newest first)
+  /// [ascending] - Urut naik (default: false, terbaru dulu)
   ///
-  /// Returns a [Result] containing a sorted list of [Profile] objects.
+  /// Return [Result] berisi list [Profile] yang sudah diurutkan.
   Future<Result<List<Profile>>> sortedByDate({bool ascending = false}) async {
     final result = await _repository.getAllProfiles();
 

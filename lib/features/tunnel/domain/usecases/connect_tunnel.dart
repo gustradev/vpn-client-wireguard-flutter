@@ -2,22 +2,20 @@ import 'package:vpn_client_wireguard_flutter/core/result.dart';
 import 'package:vpn_client_wireguard_flutter/features/tunnel/domain/entities/tunnel_status.dart';
 import 'package:vpn_client_wireguard_flutter/features/tunnel/domain/repositories/tunnel_repository.dart';
 
-/// Use case for connecting to a WireGuard VPN tunnel.
+/// Use case buat koneksi ke tunnel WireGuard VPN.
 ///
-/// This use case handles the connection process including validation,
-/// starting the tunnel, and monitoring the connection state.
+/// Di sini proses koneksi, validasi, mulai tunnel, dan monitoring status.
 class ConnectTunnel {
   final TunnelRepository _repository;
 
-  /// Creates a new ConnectTunnel use case.
+  /// Bikin instance ConnectTunnel use case.
   ConnectTunnel(this._repository);
 
-  /// Connects to a VPN tunnel using the specified profile.
+  /// Koneksi ke tunnel VPN pakai profil tertentu.
   ///
-  /// [profileId] - The ID of the profile to connect to
+  /// [profileId] - ID profil yang mau dipakai
   ///
-  /// Returns a [Result] containing the initial [TunnelStatus] on success,
-  /// or an error message on failure.
+  /// Return [Result] berisi [TunnelStatus] kalau sukses, atau error kalau gagal.
   Future<Result<TunnelStatus>> call(String profileId) async {
     // Check if a tunnel is already active
     final activeResult = await _repository.isTunnelActive();
@@ -46,14 +44,13 @@ class ConnectTunnel {
     return await _repository.startTunnel(profileId);
   }
 
-  /// Connects to a VPN tunnel with automatic retry on failure.
+  /// Koneksi ke tunnel VPN dengan retry otomatis kalau gagal.
   ///
-  /// [profileId] - The ID of the profile to connect to
-  /// [maxRetries] - Maximum number of retry attempts (default: 3)
-  /// [retryDelay] - Delay between retries in milliseconds (default: 1000)
+  /// [profileId] - ID profil yang mau dipakai
+  /// [maxRetries] - Maksimal percobaan retry (default: 3)
+  /// [retryDelay] - Jeda antar retry (ms, default: 1000)
   ///
-  /// Returns a [Result] containing the [TunnelStatus] on success,
-  /// or an error message on failure after all retries.
+  /// Return [Result] berisi [TunnelStatus] kalau sukses, atau error kalau gagal setelah semua retry.
   Future<Result<TunnelStatus>> connectWithRetry(
     String profileId, {
     int maxRetries = 3,
