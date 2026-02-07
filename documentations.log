@@ -1,6 +1,6 @@
 2026-02-08
 Note:
-- Mulai sekarang, perubahan komentar internal (misal: ganti bahasa, penyesuaian penjelasan kode) tidak akan didokumentasikan di log ini.
+
 - Dokumentasi log hanya untuk hal penting seperti debugging, error, atau perubahan besar yang berdampak ke fungsionalitas.
 
 ---
