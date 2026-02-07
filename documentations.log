@@ -1,0 +1,37 @@
+2026-02-08
+Step 1.3 selesai:
+ - Semua usecase domain (import, list, save, connect, disconnect, observe) sudah dibuat dan di-audit.
+ - Komentar sudah diubah ke bahasa Indonesia nonformal, mudah dipahami.
+ - Siap untuk integrasi ke data layer dan UI.
+2026-02-08
+Step 1.2 selesai:
+ - Semua repository interface (profile, tunnel, log) sudah dibuat dan di-audit.
+ - Method CRUD, import/export, validasi, statistik, streaming, dan error handling sudah lengkap.
+ - Siap untuk pengembangan data layer dan usecase.
+2026-02-08
+Audit Step 1.1:
+ - Semua entity domain (Profile, TunnelStatus, LogEntry) sudah di-audit.
+ - Struktur, dokumentasi, dan utility methods lengkap, efisien, dan profesional.
+ - Siap digunakan untuk MVP dan pengembangan lanjutan.
+2026-02-08
+
+DOCUMENTATION LOG - GVPN PROJECT
+================================
+
+1. README.md dibuat dan diupdate untuk branding GVPN, setup, struktur, dan catatan keamanan.
+2. SECURITY.md dibuat, berisi detail penyimpanan key, log masking, dan audit keamanan.
+3. PROFILE_FORMAT.md dibuat, berisi schema internal profile dan contoh JSON.
+4. TROUBLESHOOTING.md dibuat, berisi solusi no public IP, error umum, dan diagnostics.
+
+5. action_plan.txt diupdate dengan checklist Step 0.1 (inisialisasi, struktur, applicationId) dan Step 0.2 (folder modular, file, Riverpod, GoRouter) sudah selesai.
+6. applicationId di build.gradle sudah di-set ke com.example.gvpn.
+7. Folder lib/app, lib/core, lib/features, dan subfolder features sudah dibuat.
+8. File modular utama sudah dibuat.
+9. Dependency Riverpod dan GoRouter sudah diinstall, pub get sudah dijalankan.
+10. Semua dependency proposal (secure storage, hive, path_provider, uuid, file_picker, qr_code_scanner, permission_handler, collection) sudah ditambahkan dan pub get sudah dijalankan.
+
+Semua dokumentasi utama, setup modular, dan dependency sudah selesai untuk tahap bootstrap.
+2026-02-08
+Step 1.1 selesai:
+ - profile.dart, tunnel_status.dart, log_entry.dart sudah dibuat dan diisi sesuai domain.
+ - Semua entity domain dasar (Profile, TunnelStatus, LogEntry) sudah siap untuk MVP.
