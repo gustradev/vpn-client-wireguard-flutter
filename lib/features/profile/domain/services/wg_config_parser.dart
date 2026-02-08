@@ -17,28 +17,39 @@ class WgConfigParser {
     if (!sections.containsKey('Interface')) {
       return Result.failure('Config harus ada section [Interface]');
     }
-    final interfaceResult = _parseInterface(sections['Interface']!);
-    if (interfaceResult.isFailure) {
-      return Result.failure(interfaceResult.error);
+    final interfaceResult = _parseInterface(sections['Interface']!.first);
+    if (!interfaceResult.isSuccess) {
+      return Result.failure(interfaceResult.errorOrThrow);
     }
-    final interfaceConfig = interfaceResult.value;
+    final interfaceConfig = interfaceResult.valueOrThrow;
     final peers = <Peer>[];
     if (sections.containsKey('Peer')) {
       for (final peerFields in sections['Peer']!) {
         final peerResult = _parsePeer(peerFields);
-        if (peerResult.isFailure) {
-          return Result.failure(peerResult.error);
+        if (!peerResult.isSuccess) {
+          return Result.failure(peerResult.errorOrThrow);
         }
-        peers.add(peerResult.value);
+        peers.add(peerResult.valueOrThrow);
       }
     }
     if (peers.isEmpty) {
       return Result.failure('Config harus punya minimal satu [Peer]');
     }
+
+    final interfaceConfigName = interfaceConfig['Name']?.trim();
+    final interfaceName =
+        (interfaceConfigName != null && interfaceConfigName.isNotEmpty)
+            ? interfaceConfigName
+            : 'wg0';
+
+    final cleanedName = name?.trim();
+
     final profile = Profile(
       id: uuid.v4(),
-      name: name ?? interfaceConfig['Address'] ?? 'WG Profile',
-      interfaceName: interfaceConfig['Address'] ?? '',
+      name: (cleanedName != null && cleanedName.isNotEmpty)
+          ? cleanedName
+          : (interfaceConfig['Address'] ?? 'WG Profile'),
+      interfaceName: interfaceName,
       privateKey: interfaceConfig['PrivateKey'] ?? '',
       publicKey: interfaceConfig['PublicKey'] ?? '',
       listenPort: int.tryParse(interfaceConfig['ListenPort'] ?? ''),
@@ -59,47 +70,60 @@ class WgConfigParser {
   Map<String, List<Map<String, String>>> _parseSections(String config) {
     final sections = <String, List<Map<String, String>>>{};
     String? currentSection;
-    List<Map<String, String>> currentFields = [];
+
+    Map<String, String> currentFields = {};
+
+    void flushCurrent() {
+      if (currentSection == null) return;
+      if (currentFields.isEmpty) return;
+      sections.putIfAbsent(currentSection, () => <Map<String, String>>[]);
+      sections[currentSection]!.add(currentFields);
+      currentFields = {};
+    }
+
     final lines = config.split('\n');
     for (final line in lines) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
+      var trimmed = line.trim();
+      if (trimmed.isEmpty) continue;
+
+      // Buang comment (inline juga) dengan gaya WireGuard: '#' atau ';'
+      final hashIndex = trimmed.indexOf('#');
+      final semiIndex = trimmed.indexOf(';');
+      final cutIndex = _minPositive(hashIndex, semiIndex);
+      if (cutIndex >= 0) {
+        trimmed = trimmed.substring(0, cutIndex).trim();
+        if (trimmed.isEmpty) continue;
+      }
+
       if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-        if (currentSection != null && currentFields.isNotEmpty) {
-          sections[currentSection] = [
-            ...sections[currentSection] ?? [],
-            currentFields
-          ];
-        }
-        currentSection = trimmed.substring(1, trimmed.length - 1);
-        currentFields = [];
+        flushCurrent();
+        currentSection = trimmed.substring(1, trimmed.length - 1).trim();
         continue;
       }
-      final parts = trimmed.split('=');
-      if (parts.length == 2) {
-        final key = parts[0].trim();
-        final value = parts[1].trim();
-        currentFields.add({key: value});
-      }
+
+      // Field wajib punya '='. Jangan split semua '=' karena base64 key sering ada '=' di value.
+      final eqIndex = trimmed.indexOf('=');
+      if (eqIndex <= 0) continue;
+      if (currentSection == null) continue;
+
+      final key = trimmed.substring(0, eqIndex).trim();
+      final value = trimmed.substring(eqIndex + 1).trim();
+      if (key.isEmpty) continue;
+      currentFields[key] = value;
     }
-    if (currentSection != null && currentFields.isNotEmpty) {
-      sections[currentSection] = [
-        ...sections[currentSection] ?? [],
-        currentFields
-      ];
-    }
+    flushCurrent();
     return sections;
   }
 
+  int _minPositive(int a, int b) {
+    if (a < 0) return b;
+    if (b < 0) return a;
+    return a < b ? a : b;
+  }
+
   /// Parse field [Interface]
-  Result<Map<String, String>> _parseInterface(
-      List<Map<String, String>> fields) {
-    final result = <String, String>{};
-    for (final field in fields) {
-      field.forEach((key, value) {
-        result[key] = value;
-      });
-    }
+  Result<Map<String, String>> _parseInterface(Map<String, String> fields) {
+    final result = <String, String>{...fields};
     // Validasi
     if (!validatePrivateKey(result['PrivateKey'] ?? '')) {
       return Result.failure('PrivateKey tidak valid');
@@ -112,46 +136,52 @@ class WgConfigParser {
   }
 
   /// Parse field [Peer]
-  Result<Peer> _parsePeer(List<Map<String, String>> fields) {
+  Result<Peer> _parsePeer(Map<String, String> fields) {
     String? publicKey;
     String? presharedKey;
     String? endpoint;
     final allowedIps = <String>[];
     int? persistentKeepalive;
-    for (final field in fields) {
-      field.forEach((key, value) {
-        switch (key.toLowerCase()) {
-          case 'publickey':
-            publicKey = value;
-            break;
-          case 'presharedkey':
-            presharedKey = value;
-            break;
-          case 'endpoint':
-            endpoint = value;
-            break;
-          case 'allowedips':
-            allowedIps.addAll(value.split(',').map((s) => s.trim()));
-            break;
-          case 'persistentkeepalive':
-            persistentKeepalive = int.tryParse(value);
-            break;
-        }
-      });
-    }
+    fields.forEach((key, value) {
+      switch (key.toLowerCase()) {
+        case 'publickey':
+          publicKey = value;
+          break;
+        case 'presharedkey':
+          presharedKey = value;
+          break;
+        case 'endpoint':
+          endpoint = value;
+          break;
+        case 'allowedips':
+          allowedIps.addAll(value.split(',').map((s) => s.trim()));
+          break;
+        case 'persistentkeepalive':
+          persistentKeepalive = int.tryParse(value);
+          break;
+      }
+    });
+
     if (!validatePublicKey(publicKey ?? '')) {
       return Result.failure('PublicKey peer tidak valid');
     }
     if (allowedIps.isEmpty) {
       return Result.failure('AllowedIPs peer tidak boleh kosong');
     }
-    return Result.success(Peer(
-      id: uuid.v4(),
-      publicKey: publicKey!,
-      presharedKey: presharedKey,
-      endpoint: endpoint,
-      allowedIps: allowedIps,
-      persistentKeepalive: persistentKeepalive,
-    ));
+
+    final peerName =
+        (endpoint ?? '').trim().isNotEmpty ? endpoint!.trim() : 'Peer';
+
+    return Result.success(
+      Peer(
+        id: uuid.v4(),
+        name: peerName,
+        publicKey: publicKey!,
+        presharedKey: presharedKey,
+        endpoint: endpoint,
+        allowedIps: allowedIps,
+        persistentKeepalive: persistentKeepalive,
+      ),
+    );
   }
 }

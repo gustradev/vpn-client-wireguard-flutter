@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:hive/hive.dart';
-import 'package:uuid/uuid.dart';
 import 'package:vpn_client_wireguard_flutter/core/result.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/entities/profile.dart';
 
@@ -79,17 +77,23 @@ class PeerAdapter extends TypeAdapter<Peer> {
     writer.writeString(obj.name);
     writer.writeString(obj.publicKey);
     writer.writeBool(obj.presharedKey != null);
-    if (obj.presharedKey != null) writer.writeString(obj.presharedKey!);
+    if (obj.presharedKey != null) {
+      writer.writeString(obj.presharedKey!);
+    }
     writer.writeBool(obj.endpoint != null);
-    if (obj.endpoint != null) writer.writeString(obj.endpoint!);
+    if (obj.endpoint != null) {
+      writer.writeString(obj.endpoint!);
+    }
     writer.writeStringList(obj.allowedIps);
     writer.writeBool(obj.persistentKeepalive != null);
-    if (obj.persistentKeepalive != null)
+    if (obj.persistentKeepalive != null) {
       writer.writeInt(obj.persistentKeepalive!);
+    }
     writer.writeBool(obj.isConnected);
     writer.writeBool(obj.lastHandshake != null);
-    if (obj.lastHandshake != null)
+    if (obj.lastHandshake != null) {
       writer.writeInt(obj.lastHandshake!.millisecondsSinceEpoch);
+    }
     writer.writeBool(obj.rxBytes != null);
     if (obj.rxBytes != null) writer.writeInt(obj.rxBytes!);
     writer.writeBool(obj.txBytes != null);
@@ -104,10 +108,9 @@ class PeerAdapter extends TypeAdapter<Peer> {
 class ProfileLocalDB {
   static const String _boxName = 'profiles';
   late Box<Profile> _box;
-  final Uuid _uuid;
 
   /// Bikin instance ProfileLocalDB baru
-  ProfileLocalDB() : _uuid = const Uuid();
+  ProfileLocalDB();
 
   /// Inisialisasi database.
   ///

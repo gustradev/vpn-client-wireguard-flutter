@@ -1,4 +1,4 @@
-package com.example.wgclient.vpn_client_wireguard_flutter
+package com.example.gvpn
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -506,11 +506,11 @@ class LogRepositoryImpl implements LogRepository {
       final logs = _box.values.toList();
 
       if (logs.isEmpty) {
-        return Result.success(LogStatistics(
+        return Result.success(const LogStatistics(
           totalEntries: 0,
-          entriesByLevel: {},
-          entriesByTag: {},
-          entriesByProfile: {},
+          entriesByLevel: <LogLevel, int>{},
+          entriesByTag: <String, int>{},
+          entriesByProfile: <String, int>{},
           averageLogsPerDay: 0,
         ));
       }

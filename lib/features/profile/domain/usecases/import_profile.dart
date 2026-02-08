@@ -1,4 +1,3 @@
-import 'package:uuid/uuid.dart';
 import 'package:vpn_client_wireguard_flutter/core/result.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/entities/profile.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/repositories/profile_repository.dart';
@@ -9,10 +8,9 @@ import 'package:vpn_client_wireguard_flutter/features/profile/domain/repositorie
 /// file konfigurasi, QR code, atau data JSON.
 class ImportProfile {
   final ProfileRepository _repository;
-  final Uuid _uuid;
 
   /// Bikin instance ImportProfile use case.
-  ImportProfile(this._repository) : _uuid = const Uuid();
+  ImportProfile(this._repository);
 
   /// Import profil dari data konfigurasi.
   ///

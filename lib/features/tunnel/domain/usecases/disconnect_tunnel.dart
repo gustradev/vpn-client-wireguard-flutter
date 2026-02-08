@@ -136,7 +136,7 @@ class DisconnectTunnel {
       if (statsResult.isSuccess) {
         // Statistics are retrieved - in a real implementation,
         // you would save them to a log or database here
-        final stats = statsResult.valueOrThrow;
+        final _ = statsResult.valueOrThrow;
         // TODO: Save statistics to log/database
       }
     }

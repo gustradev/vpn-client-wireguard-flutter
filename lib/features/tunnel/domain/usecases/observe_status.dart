@@ -183,10 +183,13 @@ class ObserveStatus {
   ///
   /// Returns a [Stream] that emits [TunnelStatus] at the specified interval.
   Stream<TunnelStatus> poll(Duration interval) {
-    return Stream.periodic(interval, (_) async {
-      final result = await _repository.getTunnelStatus();
-      return result.valueOrNull;
-    }).where((status) => status != null).cast<TunnelStatus>();
+    return Stream.periodic(interval)
+        .asyncMap((_) async {
+          final result = await _repository.getTunnelStatus();
+          return result.valueOrNull;
+        })
+        .where((status) => status != null)
+        .cast<TunnelStatus>();
   }
 
   /// Gets a summary of the current tunnel status.
