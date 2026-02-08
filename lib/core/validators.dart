@@ -31,4 +31,10 @@ bool validateAllowedIPs(String allowedIps) {
   return allowedIps.split(',').any((ip) => ip.contains('/'));
 }
 
+bool validateEndpoint(String endpoint) {
+  // Endpoint wajib punya host:port
+  if (endpoint.trim().isEmpty) return false;
+  return endpoint.contains(':');
+}
+
 // Bisa ditambah validasi lain sesuai kebutuhan

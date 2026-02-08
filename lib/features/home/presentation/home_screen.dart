@@ -66,8 +66,15 @@ class HomeScreen extends StatelessWidget {
           _NavTile(
             icon: Icons.monitor_heart_rounded,
             title: 'Status',
-            subtitle: 'Connected/disconnected + metrics (placeholder)',
+            subtitle: 'Connected/disconnected + metrics',
             onTap: () => context.go('/status'),
+          ),
+          const SizedBox(height: 12),
+          _NavTile(
+            icon: Icons.receipt_long_rounded,
+            title: 'Log',
+            subtitle: 'Lihat aktivitas dan error (masked)',
+            onTap: () => context.go('/log'),
           ),
           const SizedBox(height: 12),
           _NavTile(

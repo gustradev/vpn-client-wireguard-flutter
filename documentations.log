@@ -62,3 +62,13 @@ Update:
 Commit:
 - Fix parser, test, lint, dan update dokumentasi.
 - Semua perubahan sudah di-push ke repo.
+
+2026-02-08
+Update:
+- Step 1.8 selesai: Import profile (paste/file/QR) + preview + validasi pakai parser.
+- Step 1.9 selesai: Provider profile, tunnel, dan log (Riverpod).
+- Step 2.1–2.3 stub: MethodChannel/EventChannel + WgService/WgBackend + permission stub.
+- Step 3.1–3.3 selesai: Status metrics, Log screen + masker, Settings tile.
+- Step 3.4 selesai: Validasi endpoint + error UX no public IP.
+- Router & Home ditambah route Log.
+

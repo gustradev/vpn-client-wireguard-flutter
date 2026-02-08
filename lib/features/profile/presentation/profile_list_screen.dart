@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:vpn_client_wireguard_flutter/features/profile/presentation/providers/profile_providers.dart';
+import 'package:vpn_client_wireguard_flutter/features/profile/presentation/widgets/profile_card.dart';
 
-class ProfileListScreen extends StatelessWidget {
+// Screen buat nampilin daftar profile WireGuard.
+// Pakai Riverpod ConsumerWidget, data dari provider state.
+// Bisa import, tambah, connect/disconnect, dan hapus profile.
+class ProfileListScreen extends ConsumerWidget {
   const ProfileListScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Ambil daftar profile dari provider state
+    final profiles = ref.watch(profilesProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Profile'),
+        backgroundColor: Colors.indigo,
         actions: [
           IconButton(
             tooltip: 'Import',
@@ -17,27 +27,75 @@ class ProfileListScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: 3,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final id = 'p${index + 1}';
-          return Card(
-            elevation: 0,
-            clipBehavior: Clip.antiAlias,
-            child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.vpn_key_rounded)),
-              title: Text('Profile ${index + 1}'),
-              subtitle: const Text('Placeholder profile (dummy)'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => context.go('/profile/$id'),
+      body: profiles.isEmpty
+          // Kalau belum ada profile, tampilkan empty state
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.vpn_key,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum ada profile',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: () => context.go('/import'),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Tambah Profile'),
+                  ),
+                ],
+              ),
+            )
+          // Kalau ada profile, tampilkan list
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: profiles.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final profile = profiles[index];
+                return ProfileCard(
+                  profile: profile,
+                  onTap: () => context.go('/profile/${profile.id}'),
+                  onConnect: () {
+                    // Toggle connect/disconnect
+                    ref
+                        .read(profileListProvider.notifier)
+                        .toggleActive(profile.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(profile.isActive
+                            ? 'Disconnect dari ${profile.name}'
+                            : 'Connect ke ${profile.name}'),
+                      ),
+                    );
+                  },
+                  onDelete: () {
+                    // Hapus profile dari list
+                    ref
+                        .read(profileListProvider.notifier)
+                        .removeProfile(profile.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Profile ${profile.name} dihapus'),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-          );
-        },
-      ),
+      // Tombol tambah profile (FAB)
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.go('/import'),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Tambah'),
       ),

@@ -18,11 +18,11 @@ samples, guidance on mobile development, and a full API reference.
 
 ## ✨ Fitur Utama
 
-* Import profil WireGuard (.conf, QR, paste)
+* Import profil WireGuard (paste / file .conf / QR)
 * Manajemen profil (secure storage, database lokal)
 * Start/Stop tunnel (khusus Android)
 * Monitoring status (handshake, rx/tx, endpoint)
-* Log minimal & masking otomatis
+* Log screen + masking otomatis
 * Kunci biometrik (opsional)
 
 ---

@@ -165,6 +165,10 @@ class WgConfigParser {
     if (!validatePublicKey(publicKey ?? '')) {
       return Result.failure('PublicKey peer tidak valid');
     }
+    if (!validateEndpoint(endpoint ?? '')) {
+      return Result.failure(
+          'Endpoint kosong. Jika server tidak punya public IP, gunakan relay/VPS sebagai endpoint.');
+    }
     if (allowedIps.isEmpty) {
       return Result.failure('AllowedIPs peer tidak boleh kosong');
     }

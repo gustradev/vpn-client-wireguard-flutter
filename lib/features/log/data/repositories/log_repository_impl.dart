@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'package:vpn_client_wireguard_flutter/core/result.dart';
 import 'package:vpn_client_wireguard_flutter/features/log/domain/entities/log_entry.dart';
 import 'package:vpn_client_wireguard_flutter/features/log/domain/repositories/log_repository.dart';
+import 'package:vpn_client_wireguard_flutter/features/log/domain/services/log_masker.dart';
 
 /// Hive adapter for LogEntry entity.
 class LogEntryAdapter extends TypeAdapter<LogEntry> {
@@ -89,15 +90,16 @@ class LogRepositoryImpl implements LogRepository {
   @override
   Future<Result<LogEntry>> addLog(LogEntry log) async {
     try {
-      await _box.put(log.id, log);
-      _logController.add(log);
+      final masked = log.copyWith(message: maskLogMessage(log.message));
+      await _box.put(masked.id, masked);
+      _logController.add(masked);
 
       // Check if we need to clean up
       if (_box.length > _maxCount) {
         await _cleanupOldLogs();
       }
 
-      return Result.success(log);
+      return Result.success(masked);
     } catch (e) {
       return Result.failure('Failed to add log: ${e.toString()}');
     }
