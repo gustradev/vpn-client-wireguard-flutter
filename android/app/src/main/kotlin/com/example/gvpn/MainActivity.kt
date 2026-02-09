@@ -10,6 +10,8 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 class MainActivity : FlutterActivity() {
 	private val tag = "MainActivity"
@@ -18,6 +20,9 @@ class MainActivity : FlutterActivity() {
 
 	// WireGuard (GoBackend) does blocking work and must not run on the main thread.
 	private val wgExecutor = Executors.newSingleThreadExecutor()
+	private val statsExecutor = Executors.newSingleThreadScheduledExecutor()
+	private var statsFuture: ScheduledFuture<*>? = null
+	private var statsTickCount: Long = 0
 
 	private val vpnPermissionRequestCode = 9723
 	private var pendingVpnPermissionResult: MethodChannel.Result? = null
@@ -33,6 +38,8 @@ class MainActivity : FlutterActivity() {
 
 	override fun onDestroy() {
 		try {
+			statsFuture?.cancel(true)
+			statsExecutor.shutdown()
 			wgExecutor.shutdown()
 		} catch (_: Exception) {
 			// no-op
@@ -68,6 +75,9 @@ class MainActivity : FlutterActivity() {
 							val ok = WgBackend.startTunnel(applicationContext, normalizedConfig, profileId)
 							val detail = if (!ok) (WgBackend.getLastError() ?: "WireGuard start failed") else null
 							val endpoint = if (ok) WgBackend.getEndpoint() else null
+							val stats = if (ok) WgBackend.getTransferStats(applicationContext) else null
+							val rx = stats?.first ?: 0L
+							val tx = stats?.second ?: 0L
 							runOnUiThread {
 								if (!ok) {
 									Log.e(tag, "WG_START_FAILED: $detail")
@@ -78,8 +88,8 @@ class MainActivity : FlutterActivity() {
 											"state" to "connected",
 											"profileId" to profileId,
 											"endpoint" to endpoint,
-											"rxBytes" to 0,
-											"txBytes" to 0
+											"rxBytes" to rx,
+											"txBytes" to tx
 										)
 									)
 								}
@@ -104,21 +114,29 @@ class MainActivity : FlutterActivity() {
 						}
 					}
 					"getStatus" -> {
-						val state = WgBackend.getState()
-						val stateRaw = when (state) {
-							com.wireguard.android.backend.Tunnel.State.UP -> "connected"
-							com.wireguard.android.backend.Tunnel.State.DOWN -> "disconnected"
-							else -> "connecting"
+						val resultRef = result
+						wgExecutor.execute {
+							val state = WgBackend.getState()
+							val stateRaw = when (state) {
+								com.wireguard.android.backend.Tunnel.State.UP -> "connected"
+								com.wireguard.android.backend.Tunnel.State.DOWN -> "disconnected"
+								else -> "connecting"
+							}
+							val stats = WgBackend.getTransferStats(applicationContext)
+							val rx = stats?.first ?: 0L
+							val tx = stats?.second ?: 0L
+							runOnUiThread {
+								resultRef.success(
+									mapOf(
+										"state" to stateRaw,
+										"profileId" to (WgBackend.getActiveProfileId() ?: "-"),
+										"endpoint" to WgBackend.getEndpoint(),
+										"rxBytes" to rx,
+										"txBytes" to tx
+									)
+								)
+							}
 						}
-						result.success(
-							mapOf(
-								"state" to stateRaw,
-								"profileId" to (WgBackend.getActiveProfileId() ?: "-"),
-								"endpoint" to WgBackend.getEndpoint(),
-								"rxBytes" to 0,
-								"txBytes" to 0
-							)
-						)
 					}
 					"prepareVpn" -> {
 						val intent = VpnService.prepare(this)
@@ -146,17 +164,46 @@ class MainActivity : FlutterActivity() {
 		EventChannel(flutterEngine.dartExecutor.binaryMessenger, statsChannel)
 			.setStreamHandler(object : EventChannel.StreamHandler {
 				override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-					events?.success(
-						mapOf(
-							"state" to "connected",
-							"rxBytes" to 0,
-							"txBytes" to 0
-						)
-					)
+					if (events == null) return
+					Log.i(tag, "stats onListen")
+					statsFuture?.cancel(true)
+					statsTickCount = 0
+					statsFuture = statsExecutor.scheduleAtFixedRate({
+						statsTickCount += 1
+						val state = WgBackend.getState()
+						val stateRaw = when (state) {
+							com.wireguard.android.backend.Tunnel.State.UP -> "connected"
+							com.wireguard.android.backend.Tunnel.State.DOWN -> "disconnected"
+							else -> "connecting"
+						}
+						val stats = WgBackend.getTransferStats(applicationContext)
+						val rx = stats?.first ?: 0L
+						val tx = stats?.second ?: 0L
+						if (statsTickCount == 1L || statsTickCount % 10L == 0L) {
+							Log.d(tag, "stats tick#$statsTickCount state=$stateRaw rx=$rx tx=$tx")
+						}
+						runOnUiThread {
+							try {
+								events.success(
+									mapOf(
+										"state" to stateRaw,
+										"profileId" to (WgBackend.getActiveProfileId() ?: "-"),
+										"endpoint" to WgBackend.getEndpoint(),
+										"rxBytes" to rx,
+										"txBytes" to tx
+									)
+								)
+							} catch (e: Exception) {
+								Log.w(tag, "stats stream send failed: ${e.message}")
+							}
+						}
+					}, 0, 1, TimeUnit.SECONDS)
 				}
 
 				override fun onCancel(arguments: Any?) {
-					// no-op
+					Log.i(tag, "stats onCancel")
+					statsFuture?.cancel(true)
+					statsFuture = null
 				}
 			})
 	}

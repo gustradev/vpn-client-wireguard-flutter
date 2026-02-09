@@ -89,3 +89,24 @@ final vpnPermissionProvider = FutureProvider<bool>((ref) async {
   final channel = ref.read(wgPlatformChannelProvider);
   return channel.prepareVpn();
 });
+
+/// Listens to native WireGuard stats stream and syncs it into [tunnelStatusProvider].
+///
+/// Watched at app root to keep a single subscription alive.
+final tunnelStatsSyncProvider = Provider<void>((ref) {
+  final channel = ref.read(wgPlatformChannelProvider);
+  final notifier = ref.read(tunnelStatusProvider.notifier);
+
+  final sub = channel.observeStats().listen(
+    (event) {
+      final rx = (event['rxBytes'] as num?)?.toInt();
+      final tx = (event['txBytes'] as num?)?.toInt();
+      notifier.updateStats(rxBytes: rx, txBytes: tx);
+    },
+    onError: (Object e) {
+      notifier.setError(e.toString());
+    },
+  );
+
+  ref.onDispose(sub.cancel);
+});

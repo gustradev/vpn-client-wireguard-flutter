@@ -171,16 +171,20 @@ class TunnelRepositoryImpl implements TunnelRepository {
     final stateRaw = (data['state'] ?? 'disconnected').toString();
     final state = _mapState(stateRaw);
 
+    final handshake = state == TunnelState.connected
+        ? HandshakeInfo(
+            timestamp: now,
+            peerPublicKey: data['peerPublicKey']?.toString() ?? '-',
+            endpoint: data['endpoint']?.toString(),
+            isSuccessful: true,
+          )
+        : null;
+
     return TunnelStatus(
       profileId: profileId,
       state: state,
       lastStateChange: now,
-      handshake: HandshakeInfo(
-        timestamp: now,
-        peerPublicKey: data['peerPublicKey']?.toString() ?? '-',
-        endpoint: data['endpoint']?.toString(),
-        isSuccessful: state == TunnelState.connected,
-      ),
+      handshake: handshake,
       transferStats: TransferStats(
         rxBytes: ((data['rxBytes'] ?? 0) as num).toInt(),
         txBytes: ((data['txBytes'] ?? 0) as num).toInt(),
