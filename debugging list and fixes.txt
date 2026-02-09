@@ -1,0 +1,29 @@
+[DEBUGGING LIST & FIXES]
+
+1. Gradle repository conflict
+   - FIX: Hapus allprojects { repositories { ... } } dari build.gradle
+   - FIX: Gunakan repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS) di settings.gradle
+
+2. WireGuard dependency error (core, wg-go)
+   - FIX: Pakai hanya com.wireguard.android:tunnel:1.0.20260102
+   - FIX: Exclude module core
+
+3. minSdkVersion error
+   - FIX: Set minSdk = 24 di build.gradle
+
+4. registerForActivityResult error
+   - FIX: Hapus dari MainActivity, handle permission via MethodChannel
+
+5. Config.parse error
+   - FIX: Gunakan InputStream dari configText, bukan StringReader
+
+6. Manifest merger error
+   - FIX: Pastikan minSdk >= 24, dependency sesuai
+
+7. Build cache issues
+   - FIX: flutter clean, rm -rf android/.gradle, rm -rf ~/.gradle/caches/modules-2/files-2.1/com.wireguard*, flutter pub get, ./gradlew clean
+
+8. Final build
+   - FIX: flutter build apk sukses
+
+[Ready for device testing]
