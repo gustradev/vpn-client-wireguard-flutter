@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/entities/profile.dart';
 import 'package:vpn_client_wireguard_flutter/features/tunnel/data/datasources/wg_platform_channel.dart';
+import 'package:vpn_client_wireguard_flutter/features/tunnel/data/repositories/tunnel_repository_impl.dart';
 import 'package:vpn_client_wireguard_flutter/features/tunnel/domain/entities/tunnel_status.dart';
 
 // State tunnel sederhana (MVP)
@@ -61,6 +62,10 @@ class TunnelStateNotifier extends StateNotifier<TunnelStatus?> {
       updatedAt: now,
     );
   }
+
+  void setStatus(TunnelStatus status) {
+    state = status;
+  }
 }
 
 // Provider status tunnel
@@ -72,6 +77,11 @@ final tunnelStatusProvider =
 // Provider channel native
 final wgPlatformChannelProvider = Provider<WgPlatformChannel>((ref) {
   return WgPlatformChannel();
+});
+
+// Provider repository tunnel
+final tunnelRepositoryProvider = Provider<TunnelRepositoryImpl>((ref) {
+  return TunnelRepositoryImpl(channel: ref.read(wgPlatformChannelProvider));
 });
 
 // Helper buat request permission VPN (stub)

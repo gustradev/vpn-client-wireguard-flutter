@@ -24,6 +24,22 @@ class TunnelRepositoryImpl implements TunnelRepository {
     }
   }
 
+  Future<Result<TunnelStatus>> startTunnelWithConfig(
+    String profileId,
+    String config,
+  ) async {
+    try {
+      final data = await _channel.startTunnel(
+        profileId: profileId,
+        config: config,
+      );
+      _currentStatus = _mapStatus(data, profileId);
+      return Result.success(_currentStatus!);
+    } catch (e) {
+      return Result.failure('Gagal start tunnel: ${e.toString()}');
+    }
+  }
+
   @override
   Future<Result<TunnelStatus>> stopTunnel() async {
     try {

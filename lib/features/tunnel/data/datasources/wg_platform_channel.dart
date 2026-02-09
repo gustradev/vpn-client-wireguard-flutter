@@ -6,10 +6,17 @@ class WgPlatformChannel {
   static const EventChannel _statsChannel =
       EventChannel('gvpn/wireguard_stats');
 
-  Future<Map<String, dynamic>> startTunnel({required String profileId}) async {
-    final result = await _channel.invokeMethod('startTunnel', {
+  Future<Map<String, dynamic>> startTunnel({
+    required String profileId,
+    String? config,
+  }) async {
+    final payload = <String, dynamic>{
       'profileId': profileId,
-    });
+    };
+    if (config != null) {
+      payload['config'] = config;
+    }
+    final result = await _channel.invokeMethod('startTunnel', payload);
     return Map<String, dynamic>.from(result as Map);
   }
 

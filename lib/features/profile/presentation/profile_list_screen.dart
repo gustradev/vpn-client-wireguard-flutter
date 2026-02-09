@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/presentation/providers/profile_providers.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/presentation/widgets/profile_card.dart';
+import 'package:vpn_client_wireguard_flutter/features/tunnel/presentation/providers/tunnel_providers.dart';
 
 // Screen buat nampilin daftar profile WireGuard.
 // Pakai Riverpod ConsumerWidget, data dari provider state.
@@ -12,6 +13,7 @@ class ProfileListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(defaultProfileBootstrapProvider);
     // Ambil daftar profile dari provider state
     final profiles = ref.watch(profilesProvider);
 
@@ -66,16 +68,80 @@ class ProfileListScreen extends ConsumerWidget {
                   onTap: () => context.go('/profile/${profile.id}'),
                   onConnect: () {
                     // Toggle connect/disconnect
-                    ref
-                        .read(profileListProvider.notifier)
-                        .toggleActive(profile.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(profile.isActive
-                            ? 'Disconnect dari ${profile.name}'
-                            : 'Connect ke ${profile.name}'),
-                      ),
-                    );
+                    () async {
+                      final tunnelRepo = ref.read(tunnelRepositoryProvider);
+                      if (profile.isActive) {
+                        final stop = await tunnelRepo.stopTunnel();
+                        if (stop.isSuccess) {
+                          ref
+                              .read(tunnelStatusProvider.notifier)
+                              .setStatus(stop.valueOrThrow);
+                          ref
+                              .read(profileListProvider.notifier)
+                              .toggleActive(profile.id);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content:
+                                      Text('Disconnect dari ${profile.name}')),
+                            );
+                          }
+                        } else if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(stop.errorOrThrow)),
+                          );
+                        }
+                        return;
+                      }
+
+                      final allowed = await ref
+                          .read(wgPlatformChannelProvider)
+                          .prepareVpn();
+                      if (!context.mounted) return;
+                      if (!allowed) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Izin VPN ditolak')),
+                        );
+                        return;
+                      }
+
+                      final config = profile.rawConfig?.trim() ?? '';
+                      if (config.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Config profile kosong')),
+                        );
+                        return;
+                      }
+
+                      final start = await tunnelRepo.startTunnelWithConfig(
+                        profile.id,
+                        config,
+                      );
+                      if (!start.isSuccess) {
+                        ref
+                            .read(tunnelStatusProvider.notifier)
+                            .setError(start.errorOrThrow);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(start.errorOrThrow)),
+                          );
+                        }
+                        return;
+                      }
+
+                      ref
+                          .read(tunnelStatusProvider.notifier)
+                          .setStatus(start.valueOrThrow);
+                      ref
+                          .read(profileListProvider.notifier)
+                          .toggleActive(profile.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Connect ke ${profile.name}')),
+                        );
+                      }
+                    }();
                   },
                   onDelete: () {
                     // Hapus profile dari list

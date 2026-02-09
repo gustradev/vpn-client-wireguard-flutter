@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/entities/profile.dart';
 import 'package:vpn_client_wireguard_flutter/features/profile/domain/services/wg_config_parser.dart';
@@ -69,4 +70,20 @@ final profileByIdProvider = Provider.family<Profile?, String>((ref, id) {
 // Provider parser config WireGuard
 final wgConfigParserProvider = Provider<WgConfigParser>((ref) {
   return WgConfigParser();
+});
+
+// Bootstrap default profile dari assets (gusTra.conf)
+final defaultProfileBootstrapProvider = FutureProvider<void>((ref) async {
+  final profiles = ref.read(profilesProvider);
+  if (profiles.isNotEmpty) return;
+
+  final config = await rootBundle.loadString('assets/gusTra.conf');
+  final parser = ref.read(wgConfigParserProvider);
+  final result = parser.parse(config, name: 'gusTra');
+  if (!result.isSuccess) return;
+
+  final profile = result.valueOrThrow;
+  final exists = profiles.any((p) => p.name == profile.name);
+  if (exists) return;
+  ref.read(profileListProvider.notifier).addProfile(profile);
 });

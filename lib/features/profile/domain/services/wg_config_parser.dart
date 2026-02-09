@@ -62,6 +62,7 @@ class WgConfigParser {
       peers: peers,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      rawConfig: config,
     );
     return Result.success(profile);
   }

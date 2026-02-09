@@ -44,6 +44,9 @@ class Profile extends Equatable {
   /// Catatan atau deskripsi tambahan (opsional)
   final String? notes;
 
+  /// Raw config WireGuard (opsional, untuk restore/rekoneksi)
+  final String? rawConfig;
+
   const Profile({
     required this.id,
     required this.name,
@@ -58,6 +61,7 @@ class Profile extends Equatable {
     required this.createdAt,
     required this.updatedAt,
     this.notes,
+    this.rawConfig,
   });
 
   /// Creates a copy of this profile with some fields replaced
@@ -75,6 +79,7 @@ class Profile extends Equatable {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? notes,
+    String? rawConfig,
   }) {
     return Profile(
       id: id ?? this.id,
@@ -90,6 +95,7 @@ class Profile extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       notes: notes ?? this.notes,
+      rawConfig: rawConfig ?? this.rawConfig,
     );
   }
 
@@ -117,6 +123,7 @@ class Profile extends Equatable {
         createdAt,
         updatedAt,
         notes,
+        rawConfig,
       ];
 }
 

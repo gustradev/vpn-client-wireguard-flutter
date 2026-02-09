@@ -10,9 +10,11 @@ class StatusScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(defaultProfileBootstrapProvider);
     final cs = Theme.of(context).colorScheme;
     final profiles = ref.watch(profilesProvider);
     final status = ref.watch(tunnelStatusProvider);
+    final tunnelRepo = ref.read(tunnelRepositoryProvider);
 
     final activeProfile = profiles.firstWhereOrNull((p) => p.isActive);
 
@@ -51,15 +53,32 @@ class StatusScreen extends ConsumerWidget {
           FilledButton.icon(
             onPressed: () async {
               if (status?.isConnected == true) {
-                ref.read(tunnelStatusProvider.notifier).disconnect();
-                if (activeProfile != null) {
+                final stop = await tunnelRepo.stopTunnel();
+                if (stop.isSuccess) {
                   ref
-                      .read(profileListProvider.notifier)
-                      .toggleActive(activeProfile.id);
+                      .read(tunnelStatusProvider.notifier)
+                      .setStatus(stop.valueOrThrow);
+                  if (activeProfile != null) {
+                    ref
+                        .read(profileListProvider.notifier)
+                        .toggleActive(activeProfile.id);
+                  }
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('VPN diputus')),
+                    );
+                  }
+                  return;
                 }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('VPN diputus')),
-                );
+
+                ref
+                    .read(tunnelStatusProvider.notifier)
+                    .setError(stop.errorOrThrow);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(stop.errorOrThrow)),
+                  );
+                }
                 return;
               }
 
@@ -81,11 +100,37 @@ class StatusScreen extends ConsumerWidget {
                   );
                   return;
                 }
+                final config = first.rawConfig?.trim() ?? '';
+                if (config.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Config profile kosong')),
+                  );
+                  return;
+                }
+
+                final start =
+                    await tunnelRepo.startTunnelWithConfig(first.id, config);
+                if (!start.isSuccess) {
+                  ref
+                      .read(tunnelStatusProvider.notifier)
+                      .setError(start.errorOrThrow);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(start.errorOrThrow)),
+                    );
+                  }
+                  return;
+                }
+
                 ref.read(profileListProvider.notifier).toggleActive(first.id);
-                ref.read(tunnelStatusProvider.notifier).connect(first);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Connect ke ${first.name}')),
-                );
+                ref
+                    .read(tunnelStatusProvider.notifier)
+                    .setStatus(start.valueOrThrow);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Connect ke ${first.name}')),
+                  );
+                }
                 return;
               }
 
@@ -98,7 +143,32 @@ class StatusScreen extends ConsumerWidget {
                 );
                 return;
               }
-              ref.read(tunnelStatusProvider.notifier).connect(activeProfile);
+              final config = activeProfile.rawConfig?.trim() ?? '';
+              if (config.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Config profile kosong')),
+                );
+                return;
+              }
+
+              final start = await tunnelRepo.startTunnelWithConfig(
+                activeProfile.id,
+                config,
+              );
+              if (!start.isSuccess) {
+                ref
+                    .read(tunnelStatusProvider.notifier)
+                    .setError(start.errorOrThrow);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(start.errorOrThrow)),
+                  );
+                }
+                return;
+              }
+              ref
+                  .read(tunnelStatusProvider.notifier)
+                  .setStatus(start.valueOrThrow);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Connect ke ${activeProfile.name}')),
               );
